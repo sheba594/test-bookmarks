@@ -263,6 +263,42 @@
       padding: 0.1rem 0.5rem;
       margin-left: 0.5rem;
     }
+
+    .search-wrapper {
+      position: relative;
+      margin-bottom: 1rem;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 0.75rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #9ca3af;
+      pointer-events: none;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 0.6rem 0.9rem 0.6rem 2.25rem;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      color: #1a1a2e;
+      background: #fafafa;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      outline: none;
+    }
+
+    .search-input:focus {
+      border-color: #6366f1;
+      box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
+      background: #fff;
+    }
+
+    .search-input::placeholder {
+      color: #9ca3af;
+    }
   </style>
 </head>
 <body>
@@ -296,6 +332,12 @@
         Saved bookmarks
         <span class="count-badge" id="count-badge">0</span>
       </div>
+      <div class="search-wrapper">
+        <svg class="search-icon" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+          <circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/>
+        </svg>
+        <input type="text" id="search-input" class="search-input" placeholder="Search bookmarks...">
+      </div>
       <div id="bookmark-list"></div>
     </div>
   </div>
@@ -328,21 +370,24 @@
 
     function render() {
       const bookmarks = load();
+      const query = (document.getElementById('search-input')?.value || '').trim().toLowerCase();
       const list = document.getElementById('bookmark-list');
       const badge = document.getElementById('count-badge');
 
-      badge.textContent = bookmarks.length;
+      const filtered = bookmarks
+        .map((bm, i) => ({ bm, i }))
+        .filter(({ bm }) => !query || bm.title.toLowerCase().includes(query));
 
-      if (bookmarks.length === 0) {
-        list.innerHTML = `
-          <div class="empty-state">
-            <span class="icon">🔖</span>
-            <p>No bookmarks yet — add one above!</p>
-          </div>`;
+      badge.textContent = query ? `${filtered.length}/${bookmarks.length}` : bookmarks.length;
+
+      if (filtered.length === 0) {
+        list.innerHTML = query
+          ? `<div class="empty-state"><span class="icon">🔍</span><p>No results for &ldquo;${escHtml(query)}&rdquo;</p></div>`
+          : `<div class="empty-state"><span class="icon">🔖</span><p>No bookmarks yet — add one above!</p></div>`;
         return;
       }
 
-      list.innerHTML = bookmarks.map((bm, i) => {
+      list.innerHTML = filtered.map(({ bm, i }) => {
         const favicon = faviconUrl(bm.url);
         const faviconImg = favicon
           ? `<img class="favicon" src="${favicon}" alt="" onerror="this.style.display='none'">`
@@ -403,6 +448,8 @@
       render();
       showToast('Bookmark deleted.');
     });
+
+    document.getElementById('search-input').addEventListener('input', render);
 
     render();
   </script>
