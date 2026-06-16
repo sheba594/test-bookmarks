@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bookmark Manager</title>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f0f2f5;
+      color: #1a1a2e;
+      min-height: 100vh;
+      padding: 2rem 1rem;
+    }
+
+    .container {
+      max-width: 680px;
+      margin: 0 auto;
+    }
+
+    header {
+      margin-bottom: 2rem;
+      text-align: center;
+    }
+
+    header h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #1a1a2e;
+      letter-spacing: -0.5px;
+    }
+
+    header p {
+      color: #6b7280;
+      margin-top: 0.35rem;
+      font-size: 0.95rem;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.06);
+      padding: 1.75rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .form-row {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+
+    label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #374151;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    input[type="text"],
+    input[type="url"] {
+      width: 100%;
+      padding: 0.65rem 0.9rem;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      color: #1a1a2e;
+      background: #fafafa;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      outline: none;
+    }
+
+    input[type="text"]:focus,
+    input[type="url"]:focus {
+      border-color: #6366f1;
+      box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
+      background: #fff;
+    }
+
+    input::placeholder {
+      color: #9ca3af;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      padding: 0.7rem 1.25rem;
+      border: none;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+    }
+
+    .btn:active {
+      transform: scale(0.97);
+    }
+
+    .btn-primary {
+      background: #6366f1;
+      color: #fff;
+      width: 100%;
+      margin-top: 0.25rem;
+      box-shadow: 0 2px 8px rgba(99,102,241,0.3);
+    }
+
+    .btn-primary:hover {
+      background: #4f46e5;
+      box-shadow: 0 4px 12px rgba(99,102,241,0.4);
+    }
+
+    .btn-delete {
+      background: transparent;
+      color: #9ca3af;
+      padding: 0.4rem 0.6rem;
+      border-radius: 8px;
+      flex-shrink: 0;
+    }
+
+    .btn-delete:hover {
+      background: #fee2e2;
+      color: #ef4444;
+    }
+
+    .section-title {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      margin-bottom: 1rem;
+    }
+
+    #bookmark-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+
+    .bookmark-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.85rem 1rem;
+      background: #f9fafb;
+      border: 1.5px solid #f3f4f6;
+      border-radius: 12px;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .bookmark-item:hover {
+      border-color: #e0e7ff;
+      box-shadow: 0 2px 8px rgba(99,102,241,0.08);
+    }
+
+    .favicon {
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+      flex-shrink: 0;
+      object-fit: contain;
+    }
+
+    .bookmark-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .bookmark-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #1a1a2e;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .bookmark-url {
+      font-size: 0.78rem;
+      color: #9ca3af;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-top: 0.1rem;
+    }
+
+    .bookmark-link {
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .bookmark-link:hover .bookmark-title {
+      color: #6366f1;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 2.5rem 1rem;
+      color: #9ca3af;
+    }
+
+    .empty-state .icon {
+      font-size: 2.5rem;
+      display: block;
+      margin-bottom: 0.75rem;
+    }
+
+    .empty-state p {
+      font-size: 0.9rem;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 1.5rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: #1a1a2e;
+      color: #fff;
+      padding: 0.65rem 1.25rem;
+      border-radius: 10px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      opacity: 0;
+      transition: transform 0.25s ease, opacity 0.25s ease;
+      z-index: 999;
+      white-space: nowrap;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    .count-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: #e0e7ff;
+      color: #6366f1;
+      font-size: 0.72rem;
+      font-weight: 700;
+      border-radius: 999px;
+      padding: 0.1rem 0.5rem;
+      margin-left: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Bookmarks</h1>
+      <p>Save and organize your favorite links</p>
+    </header>
+
+    <div class="card">
+      <form id="bookmark-form">
+        <div class="form-row">
+          <div class="input-group">
+            <label for="title-input">Title</label>
+            <input type="text" id="title-input" placeholder="My favorite site" required>
+          </div>
+          <div class="input-group">
+            <label for="url-input">URL</label>
+            <input type="url" id="url-input" placeholder="https://example.com" required>
+          </div>
+          <button type="submit" class="btn btn-primary">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+            Add Bookmark
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <div class="card">
+      <div class="section-title">
+        Saved bookmarks
+        <span class="count-badge" id="count-badge">0</span>
+      </div>
+      <div id="bookmark-list"></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const STORAGE_KEY = 'bm_bookmarks';
+
+    function load() {
+      try {
+        return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+      } catch {
+        return [];
+      }
+    }
+
+    function save(bookmarks) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(bookmarks));
+    }
+
+    function faviconUrl(url) {
+      try {
+        const origin = new URL(url).origin;
+        return `https://www.google.com/s2/favicons?domain=${origin}&sz=32`;
+      } catch {
+        return null;
+      }
+    }
+
+    function render() {
+      const bookmarks = load();
+      const list = document.getElementById('bookmark-list');
+      const badge = document.getElementById('count-badge');
+
+      badge.textContent = bookmarks.length;
+
+      if (bookmarks.length === 0) {
+        list.innerHTML = `
+          <div class="empty-state">
+            <span class="icon">🔖</span>
+            <p>No bookmarks yet — add one above!</p>
+          </div>`;
+        return;
+      }
+
+      list.innerHTML = bookmarks.map((bm, i) => {
+        const favicon = faviconUrl(bm.url);
+        const faviconImg = favicon
+          ? `<img class="favicon" src="${favicon}" alt="" onerror="this.style.display='none'">`
+          : '';
+        return `
+          <div class="bookmark-item" data-index="${i}">
+            <a class="bookmark-link" href="${escHtml(bm.url)}" target="_blank" rel="noopener noreferrer">
+              ${faviconImg}
+              <div class="bookmark-info">
+                <div class="bookmark-title">${escHtml(bm.title)}</div>
+                <div class="bookmark-url">${escHtml(bm.url)}</div>
+              </div>
+            </a>
+            <button class="btn btn-delete" aria-label="Delete bookmark" data-index="${i}">
+              <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/>
+              </svg>
+            </button>
+          </div>`;
+      }).join('');
+    }
+
+    function escHtml(str) {
+      return str.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+
+    let toastTimer;
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove('show'), 2200);
+    }
+
+    document.getElementById('bookmark-form').addEventListener('submit', e => {
+      e.preventDefault();
+      const title = document.getElementById('title-input').value.trim();
+      const url = document.getElementById('url-input').value.trim();
+
+      const bookmarks = load();
+      bookmarks.unshift({ title, url, addedAt: Date.now() });
+      save(bookmarks);
+      render();
+
+      e.target.reset();
+      document.getElementById('title-input').focus();
+      showToast('Bookmark saved!');
+    });
+
+    document.getElementById('bookmark-list').addEventListener('click', e => {
+      const btn = e.target.closest('.btn-delete');
+      if (!btn) return;
+      const index = parseInt(btn.dataset.index, 10);
+      const bookmarks = load();
+      bookmarks.splice(index, 1);
+      save(bookmarks);
+      render();
+      showToast('Bookmark deleted.');
+    });
+
+    render();
+  </script>
+</body>
+</html>
